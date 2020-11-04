@@ -1,135 +1,102 @@
 version: "3"
 networks:
-    web-network:
-        driver: bridge
-        ipam:
-            config:
-                - subnet: 192.168.10.0/24
+  web-network:
+    driver: bridge
+    ipam:
+      config:
+        - subnet: 192.168.10.0/24
 
-    db-network:
-        driver: bridge
-        ipam:
-            config:
-                - subnet: 192.168.20.0/24
+  db-network:
+    driver: bridge
+    ipam:
+      config:
+        - subnet: 192.168.20.0/24
 
 services:
-    proxy:
-        image: nginx
-        ports:
-            - "80:80"
-            - "443:443"
-        volumes:
-            - nginx.conf:/etc/nginx/nginx.conf
-            - server.pem:/etc/nginx/server.pem
-            - server.key:/etc/nginx/server.key
-        networks:
-            - web-network
+  proxy:
+    image: nginx
+    ports:
+      - "80:80"
+      - "443:443"
+    volumes:
+      - nginx.conf:/etc/nginx/nginx.conf
+      - server.pem:/etc/nginx/server.pem
+      - server.key:/etc/nginx/server.key
+    networks:
+      - web-network
 
-    client:
-        container_name: client
-        build: ./client
-        restart: always
-        command: npm run start
-        #ports:
-        #    - "3001:3001"
-        #expose:
-        #    - 3001
-        # volumes:
-        #     - ./client:/client
-        #     - /client/node_modules
-        links:
-            - server
-        environment:
-            - CHOKIDAR_USEPOLLING=true
-        stdin_open: true
-        networks:
-            - web-network
-            - db-network
+  client:
+    container_name: client
+    build: ./client
+    restart: always
+    command: npm run start
+    links:
+      - server
+    environment:
+      - CHOKIDAR_USEPOLLING=true
+    stdin_open: true
+    networks:
+      - web-network
+      - db-network
 
-    clientteacher:
-        container_name: clientteacher
-        build: ./clientteacher
-        restart: always
-        command: npm run start
-        #ports:
-        #    - "3002:3002"
-        #expose:
-        #    - 3002
-        # volumes:
-        #     - ./client:/client
-        #     - /client/node_modules
-        links:
-            - server
-        environment:
-            - CHOKIDAR_USEPOLLING=true
-        stdin_open: true
-        networks:
-            - web-network
-            - db-network
+  clientteacher:
+    container_name: clientteacher
+    build: ./clientteacher
+    restart: always
+    command: npm run start
+    links:
+      - server
+    environment:
+      - CHOKIDAR_USEPOLLING=true
+    stdin_open: true
+    networks:
+      - web-network
+      - db-network
 
-    server:
-        container_name: server
-        build: ./
-        restart: always
-        command: npm run start
-        #hostname: server
-        #ports:
-        #    - "5000:5000"
-        #expose:
-        #    - 5000
-        # volumes:
-        #     - ./:/server
-        #     - /server/node_modules
-        depends_on:
-            - mongo
-        environment:
-            - PORT=5000
-        stdin_open: true
-        networks:
-                    - web-network
-                    - db-network
+  server:
+    container_name: server
+    build: ./
+    restart: always
+    command: npm run start
+    depends_on:
+      - mongo
+    environment:
+      - PORT=5000
+    stdin_open: true
+    networks:
+      - web-network
+      - db-network
 
-    mongo-express:
-        image: mongo-express
-        restart: always
-        #ports:
-        #    - "8081:8081"
-        environment:
-            - 'ME_CONFIG_MONGODB_ENABLE_ADMIN=true'
-            - 'ME_CONFIG_MONGODB_ADMINUSERNAME=root'
-            - 'ME_CONFIG_MONGODB_ADMINPASSWORD=example'
-            - 'ME_CONFIG_BASICAUTH_USERNAME=admin'
-            - 'ME_CONFIG_BASICAUTH_PASSWORD=pwd123!@#'
-        depends_on:
-            - mongo
-        #links:
-        #    - mongo
-        networks:
-            - web-network
-            - db-network
+  mongo-express:
+    image: mongo-express
+    restart: always
+    environment:
+      - 'ME_CONFIG_MONGODB_ENABLE_ADMIN=true'
+      - 'ME_CONFIG_MONGODB_ADMINUSERNAME=root'
+      - 'ME_CONFIG_MONGODB_ADMINPASSWORD=example'
+      - 'ME_CONFIG_BASICAUTH_USERNAME=admin'
+      - 'ME_CONFIG_BASICAUTH_PASSWORD=pwd123!@#'
+    depends_on:
+      - mongo
+    networks:
+      - web-network
+      - db-network
 
 
-    mongo:
-        container_name: mongo
-        image: mongo
-        hostname: mongo
-        #expose:
-        #    - "27017"
-        restart: always
-        environment:
-            - 'MONGO_INITDB_ROOT_USERNAME=root'
-            - 'MONGO_INITDB_ROOT_PASSWORD=example'
-            - 'MONGO_INITDB_DATABASE=practice'
-        # volumes:
-        #    - mongodata:/data/db
-        volumes:
-            - ./mongo-init.js:/docker-entrypoint-initdb.d/mongo-init.js:ro
-            - mongodata:/data/db
-        #ports:
-        #    - "27017:27017"
-        # command: mongod
-        networks:
-            - db-network
+  mongo:
+    container_name: mongo
+    image: mongo
+    hostname: mongo
+    restart: always
+    environment:
+      - 'MONGO_INITDB_ROOT_USERNAME=root'
+      - 'MONGO_INITDB_ROOT_PASSWORD=example'
+      - 'MONGO_INITDB_DATABASE=practice'
+    volumes:
+      - ./mongo-init.js:/docker-entrypoint-initdb.d/mongo-init.js:ro
+      - mongodata:/data/db
+    networks:
+      - db-network
 
 volumes:
-    mongodata:
+  mongodata:
